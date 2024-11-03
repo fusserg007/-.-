@@ -1,0 +1,25 @@
+import torch
+from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
+import soundfile as sf
+
+# Загрузим модель и процессор
+processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
+model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h")
+
+# Открываем и загружаем аудиофайл
+audio_input, sample_rate = sf.read("audio.wav")
+
+# Преобразуем аудио в нужный формат
+input_values = processor(audio_input, sampling_rate=sample_rate, return_tensors="pt").input_values
+
+# Получаем логиты и предсказания
+with torch.no_grad():
+    logits = model(input_values).logits
+
+# Декодируем предсказания
+predicted_ids = torch.argmax(logits, dim=-1)
+transcription = processor.decode(predicted_ids[0])
+
+print("Транскрипция:", transcription)
+
+
